@@ -52,9 +52,9 @@ jobs:
         # powershell on windows + strawberry perl
         # msys2 {0} on windows + msys2
         shell: >-
-          ${{   fromJSON( '["", "bash {0}"]'       )[ matrix.os == 'ubuntu-latest'  || matrix.os == 'macos-11'     ]
-          }}${{ fromJSON( '["", "powershell {0}"]' )[ matrix.os == 'windows-latest' && matrix.dist == 'strawberry' ]
-          }}${{ fromJSON( '["", "msys2 {0}"]'      )[ matrix.os == 'windows-latest' && matrix.dist == 'msys2'      ] }}
+          ${{   fromJSON( '["", "bash {0}"]'       )[ startsWith(matrix.os, 'ubuntu-' ) || startsWith(matrix.os, 'macos-') ]
+          }}${{ fromJSON( '["", "powershell {0}"]' )[ startsWith(matrix.os, 'windows-') && matrix.dist == 'strawberry'     ]
+          }}${{ fromJSON( '["", "msys2 {0}"]'      )[ startsWith(matrix.os, 'windows-') && matrix.dist == 'msys2'          ] }}
     strategy:
       fail-fast: false
       matrix:
@@ -80,7 +80,7 @@ jobs:
           - perl-version: '5.34'
             os: macos-11
             alien-install-type: 'share'
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }} with install-type ${{ matrix.alien-install-type }}, dist ${{ matrix.dist }}
+    name: Perl ${{ matrix.perl-version }} on ${{ matrix.os }} with install-type ${{ matrix.alien-install-type }}, dist ${{ matrix.dist }}
 
     steps:
       - name: Get dist artifact
