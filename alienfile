@@ -16,7 +16,15 @@ share {
   plugin Extract => 'tar.gz';
   plugin 'Build::CMake';
   build [
-    ['%{cmake}', @{ meta->prop->{plugin_build_cmake}->{args} }, '%{.install.extract}'],
+    ['%{cmake}',
+      ( $^O eq 'MSWin32'
+      ? qw(
+        -DPLATFORM_HAS_UNISTD_HEADER=0
+        -DHAVE_FORK=0 -DHAVE_PIPE=0
+      ) : () ),
+      @{ meta->prop->{plugin_build_cmake}->{args} },
+      '%{.install.extract}',
+    ],
     '%{make}',
     '%{make} install',
     sub {
