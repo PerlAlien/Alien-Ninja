@@ -1,6 +1,6 @@
 # NAME
 
-Alien::Ninja - Find or build Ninja
+Alien::Ninja - Find or build Ninja build tool
 
 # SYNOPSIS
 

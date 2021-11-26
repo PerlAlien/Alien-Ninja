@@ -9,7 +9,7 @@ use 5.008004;
 
 =head1 NAME
 
-Alien::Ninja - Find or build Ninja
+Alien::Ninja - Find or build Ninja build tool
 
 =head1 SYNOPSIS
 
