@@ -47,16 +47,30 @@ jobs:
     needs: dist
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        perl: ['5']
+        os: [ubuntu-latest]
+        perl-version: ['5.8', '5.20', '5.30', '5.34']
+        alien-install-type: [ 'system', 'share' ]
         include:
-          - { os: 'ubuntu-latest', perl: "5.14" }
-          - { os: 'ubuntu-latest', perl: "5.16" }
-          - { os: 'ubuntu-latest', perl: "5.20" }
-          - { os: 'ubuntu-latest', perl: "5.30" }
-          - { os: 'ubuntu-latest', perl: "5.32" }
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+          # Automatically set ALIEN_INSTALL_TYPE=share
+          # because no system install on Windows.
+          - perl-version: '5.34'
+            os: windows-latest
+            dist: strawberry
+          - perl-version: '5.34'
+            os: windows-latest
+            dist: msys2
+          - perl-version: '5.34'
+            os: windows-latest
+            dist: cygwin
+          - perl-version: '5.34'
+            os: macos-11
+            alien-install-type: 'system'
+          - perl-version: '5.34'
+            os: macos-11
+            alien-install-type: 'share'
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }} with install-type ${{ matrix.alien-install-type }}
 
     steps:
       - name: Get dist artifact
@@ -64,14 +78,27 @@ jobs:
         with:
           name: dist
 
+      # Note CMake is already installed in virtual-environments.
+
+      # Setup system Ninja
+      - name: Setup system Ninja (apt)
+        if: runner.os == 'Linux' && matrix.alien-install-type == 'system'
+        run: |
+          sudo apt-get -y update && sudo apt-get install -y ninja-build
+      - name: Setup system Ninja (homebrew)
+        if: runner.os == 'macOS' && matrix.alien-install-type == 'system'
+        run: |
+          brew install ninja
+
+      # Setup Perl
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
         if: matrix.os != 'windows-latest'
         with:
-          perl-version: ${{ matrix.perl }}
+          perl-version: ${{ matrix.perl-version }}
       - name: Set up perl (Strawberry)
         uses: shogo82148/actions-setup-perl@v1
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && matrix.dist == 'strawberry'
         with:
           distribution: 'strawberry'
 
@@ -80,6 +107,11 @@ jobs:
       - name: Install Perl deps
         run: |
           cpanm --notest --installdeps .
+
+      - name: Set ALIEN_INSTALL_TYPE
+        shell: bash
+        run: |
+          echo "ALIEN_INSTALL_TYPE=${{ matrix.alien-install-type }}" >> $GITHUB_ENV
 
       - name: Run tests
         run: |
