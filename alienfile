@@ -1,0 +1,27 @@
+use alienfile;
+
+plugin 'Probe::CommandLine' => (
+  command => 'ninja',
+  args    => [ '--version' ],
+  match   => qr/([0-9\.]+)/,
+  version => qr/([0-9\.]+)/,
+);
+
+share {
+  start_url 'https://github.com/ninja-build/ninja/releases';
+  plugin Download => (
+    filter  => qr/^v.*tar\.gz$/,
+    version => qr/([0-9\.]+)/,
+  );
+  plugin Extract => 'tar.gz';
+  plugin 'Build::CMake';
+  build [
+    ['%{cmake}', @{ meta->prop->{plugin_build_cmake}->{args} }, '%{.install.extract}'],
+    '%{make}',
+    '%{make} install',
+    sub {
+      my($build) = @_;
+      $build->runtime_prop->{command} = 'ninja';
+    },
+  ];
+}
