@@ -46,6 +46,15 @@ jobs:
   test:
     needs: dist
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        # bash on macos and linux
+        # powershell on windows + strawberry perl
+        # msys2 {0} on windows + msys2
+        shell: >-
+          ${{   fromJSON( '["", "bash {0}"]'       )[ matrix.os == 'ubuntu-latest'  || matrix.os == 'macos-11'     ]
+          }}${{ fromJSON( '["", "powershell {0}"]' )[ matrix.os == 'windows-latest' && matrix.dist == 'strawberry' ]
+          }}${{ fromJSON( '["", "msys2 {0}"]'      )[ matrix.os == 'windows-latest' && matrix.dist == 'msys2'      ] }}
     strategy:
       fail-fast: false
       matrix:
@@ -53,24 +62,25 @@ jobs:
         perl-version: ['5.8', '5.20', '5.30', '5.34']
         alien-install-type: [ 'system', 'share' ]
         include:
-          # Automatically set ALIEN_INSTALL_TYPE=share
-          # because no system install on Windows.
           - perl-version: '5.34'
             os: windows-latest
             dist: strawberry
+            alien-install-type: 'share'
           - perl-version: '5.34'
             os: windows-latest
             dist: msys2
+            alien-install-type: 'system'
           - perl-version: '5.34'
             os: windows-latest
-            dist: cygwin
+            dist: msys2
+            alien-install-type: 'share'
           - perl-version: '5.34'
             os: macos-11
             alien-install-type: 'system'
           - perl-version: '5.34'
             os: macos-11
             alien-install-type: 'share'
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }} with install-type ${{ matrix.alien-install-type }}
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }} with install-type ${{ matrix.alien-install-type }}, dist ${{ matrix.dist }}
 
     steps:
       - name: Get dist artifact
@@ -89,6 +99,21 @@ jobs:
         if: runner.os == 'macOS' && matrix.alien-install-type == 'system'
         run: |
           brew install ninja
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows' && matrix.dist == 'msys2'
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-perl
+            mingw-w64-x86_64-cmake
+      - name: Set up Ninja (MSYS2/MinGW pacman)
+        if: runner.os == 'Windows' && matrix.dist == 'msys2' && matrix.alien-install-type == 'system'
+        shell: msys2 {0}
+        run: |
+          pacman -S --needed --noconfirm mingw-w64-x86_64-ninja
 
       # Setup Perl
       - name: Set up perl
@@ -103,6 +128,10 @@ jobs:
           distribution: 'strawberry'
 
       - run: perl -V
+      - name: Install cpanm
+        if: runner.os == 'Windows' && matrix.dist == 'msys2'
+        run:
+          yes | cpan -T App::cpanminus || true
 
       - name: Install Perl deps
         run: |
