@@ -5,8 +5,6 @@ use warnings;
 use base qw( Alien::Base );
 use 5.008004;
 
-1;
-
 =head1 NAME
 
 Alien::Ninja - Find or build Ninja build tool
@@ -75,3 +73,5 @@ Detailed manual for users of Alien classes.
 =back
 
 =cut
+
+1;
