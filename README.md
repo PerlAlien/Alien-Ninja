@@ -31,6 +31,10 @@ Returns 'ninja'.
 
 # SEE ALSO
 
+- [Ninja](https://ninja-build.org/)
+
+    The Ninja build system home page.
+
 - [Alien](https://metacpan.org/pod/Alien)
 
     Documentation on the Alien concept itself.

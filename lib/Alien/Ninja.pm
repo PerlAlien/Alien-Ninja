@@ -58,6 +58,10 @@ sub alien_helper {
 
 =over 4
 
+=item L<Ninja|https://ninja-build.org/>
+
+The Ninja build system home page.
+
 =item L<Alien>
 
 Documentation on the Alien concept itself.
