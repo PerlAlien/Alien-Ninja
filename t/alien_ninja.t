@@ -4,6 +4,7 @@ use Test::Alien::Diag;
 use Alien::Ninja;
 
 alien_diag 'Alien::Ninja';
+diag "Alien::Ninja {style} : ", Alien::Ninja->runtime_prop->{'style'};
 alien_ok 'Alien::Ninja';
 
 run_ok([ Alien::Ninja->exe, qw(--version) ])
