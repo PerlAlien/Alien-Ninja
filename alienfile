@@ -69,6 +69,10 @@ share {
       $ninja_bin->move( $bin_dir->child($ninja_bin_name) );
     };
     plugin 'Build::Copy';
+    meta->after_hook( build => sub {
+      my($build) = @_;
+      $build->runtime_prop->{'style'} = 'binary';
+    });
   } else {
     # build from source
     plugin Download => (
@@ -90,6 +94,10 @@ share {
       '%{make}',
       '%{make} install',
     ];
+    meta->after_hook( build => sub {
+      my($build) = @_;
+      $build->runtime_prop->{'style'} = 'source';
+    });
   }
 
   gather sub {
@@ -97,4 +105,11 @@ share {
     $build->runtime_prop->{command} = 'ninja';
   };
 
-}
+};
+
+sys {
+  meta->after_hook( probe => sub {
+    my($build) = @_;
+    $build->runtime_prop->{'style'} = 'system';
+  });
+};
