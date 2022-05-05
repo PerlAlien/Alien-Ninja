@@ -6,6 +6,19 @@ on:
       - '*'
   pull_request:
 
+env:
+  # Note CMake is already installed in virtual-environments.
+  PKG_NAME: Ninja
+  PKG_UBUNTU: ninja-build
+  PKG_HOMEBREW: ninja
+  PKG_MSYS2_MINGW64: mingw-w64-x86_64-ninja
+  PKG_MSYS2_MINGW64_DEPS: >-
+    base-devel
+    unzip
+    mingw-w64-x86_64-toolchain
+    mingw-w64-x86_64-perl
+    mingw-w64-x86_64-cmake
+
 jobs:
   dist:
     name: Make distribution using Dist::Zilla
@@ -85,33 +98,26 @@ jobs:
         with:
           name: dist
 
-      # Note CMake is already installed in virtual-environments.
-
-      # Setup system Ninja
-      - name: Setup system Ninja (apt)
+      # Setup system package
+      - name: Setup system ${{ env.PKG_NAME }} (apt)
         if: runner.os == 'Linux' && matrix.alien-install-type == 'system'
         run: |
-          sudo apt-get -y update && sudo apt-get install -y ninja-build
-      - name: Setup system Ninja (homebrew)
+          sudo apt-get -y update && sudo apt-get install -y ${{ env.PKG_UBUNTU }}
+      - name: Setup system ${{ env.PKG_NAME }} (homebrew)
         if: runner.os == 'macOS' && matrix.alien-install-type == 'system'
         run: |
-          brew install ninja
+          brew install ${{ env.PKG_HOMEBREW }}
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows' && matrix.dist == 'msys2'
         with:
           update: true
-          install: >-
-            base-devel
-            unzip
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-perl
-            mingw-w64-x86_64-cmake
-      - name: Set up Ninja (MSYS2/MinGW pacman)
+          install: ${{ env.PKG_MSYS2_MINGW64_DEPS }}
+      - name: Set up ${{ env.PKG_NAME }} (MSYS2/MinGW pacman)
         if: runner.os == 'Windows' && matrix.dist == 'msys2' && matrix.alien-install-type == 'system'
         shell: msys2 {0}
         run: |
-          pacman -S --needed --noconfirm mingw-w64-x86_64-ninja
+          pacman -S --needed --noconfirm ${{ env.PKG_MSYS2_MINGW64 }}
 
       # Setup Perl
       - name: Set up perl
