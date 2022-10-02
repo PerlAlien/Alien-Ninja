@@ -13,9 +13,15 @@ plugin 'Probe::CommandLine' => (
 
 share {
   requires 'Path::Tiny';
+  requires 'Sort::Versions';
+  requires 'Alien::Build::Plugin::Download::GitHub', '0.09';
 
   # same URL used for both source and binary releases
-  start_url 'https://github.com/ninja-build/ninja/releases';
+  # https://github.com/ninja-build/ninja/releases
+  my %github_info = (
+      github_user => 'ninja-build',
+      github_repo => 'ninja',
+  );
 
   my ($binary_release_name, $binary_release_format);
   if( $^O eq 'linux' && $Config{archname} =~ /^x86_64/ ) {
@@ -34,11 +40,13 @@ share {
 
   if($binary_release_name && !$ENV{ALIEN_NINJA_FROM_SOURCE}) {
     my $binary_release_re = qr/$binary_release_name\.\Q$binary_release_format\E/;
-    plugin Download => (
-      filter  => qr/^$binary_release_re$/,
-      version => qr/([0-9\.]+)/,
+    plugin 'Download::GitHub' => (
+      %github_info,
+      asset       => 1,
+      asset_name  => $binary_release_name,
+      asset_format => $binary_release_format,
+      version => qr/v([0-9\.]+)/,
     );
-    plugin 'Prefer::SortVersions';
 
     my $cmp = sub {
       my($A,$B) = @_;
@@ -59,7 +67,6 @@ share {
 
       return +{ type => 'list', list => \@sorted };
     });
-    plugin Extract => $binary_release_format;
     patch sub {
       my $bin_dir = Path::Tiny->new('bin');
       $bin_dir->mkpath;
@@ -75,11 +82,9 @@ share {
     });
   } else {
     # build from source
-    plugin Download => (
-      filter  => qr/^v.*\.tar\.gz$/,
-      version => qr/([0-9\.]+)/,
+    plugin 'Download::GitHub' => (
+      %github_info,
     );
-    plugin Extract => 'tar.gz';
     plugin 'Build::CMake';
     build [
       ['%{cmake}',
