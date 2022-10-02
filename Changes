@@ -2,7 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
   - Switch to using Download::GitHub plugin.
+    See <https://github.com/PerlAlien/Alien-Ninja/pull/6>.
   - Simplify binary release OS + architecture detection.
+    See <https://github.com/PerlAlien/Alien-Ninja/pull/7>.
 
 0.02      2021-11-29 22:45:50-05:00 America/New_York
   - Download binary release of Ninja if possible.
